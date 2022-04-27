@@ -19,7 +19,7 @@ export default function CallbackPage() {
       const { code } = router.query;
       fetchAccessToken(code as string);
     }
-  }, [router]);
+  }, [router, credentials?.access_token]);
 
   useEffect(() => {
     const fetchProjects = async (accessToken: string, teamId: string | null) =>
