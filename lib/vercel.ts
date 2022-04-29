@@ -7,10 +7,10 @@ import {
 } from "typescript-json-decoder";
 
 /** Credentials needed to work with the Vercel API */
-export type AccessToken = decodeType<typeof decodeAccessToken>;
+export type Credentials = decodeType<typeof decodeCredentials>;
 
-/** Decode `AccessToken` from an API response */
-export const decodeAccessToken = record({
+/** Decode `Credentials` from an API response */
+export const decodeCredentials = record({
   token_type: string,
   access_token: string,
   installation_id: string,
@@ -49,7 +49,7 @@ export async function getAccessToken(request: {
   client_secret: string;
   code: string;
   redirect_uri: string;
-}): Promise<AccessToken> {
+}): Promise<Credentials> {
   const response = await fetch("https://api.vercel.com/v2/oauth/access_token", {
     method: "POST",
     body: new URLSearchParams(request),
@@ -57,7 +57,7 @@ export async function getAccessToken(request: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   });
-  return await response.json().then(decodeAccessToken);
+  return await response.json().then(decodeCredentials);
 }
 
 //
@@ -68,7 +68,7 @@ export async function getAccessToken(request: {
 export const getAccessTokenFromClient = async (code: string) =>
   await fetch(`/api/get-access-token?code=${code}`)
     .then((r) => r.json())
-    .then(decodeAccessToken);
+    .then(decodeCredentials);
 
 /** Client-side helper to get all available projects */
 export async function getProjects(

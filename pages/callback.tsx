@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import {
-  AccessToken,
+  Credentials,
   getAccessTokenFromClient,
   getProjects,
   Project,
@@ -9,7 +9,7 @@ import {
 
 export default function CallbackPage() {
   const router = useRouter();
-  const [credentials, setCredentials] = useState<AccessToken | null>(null);
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [projects, setProjects] = useState<Project[] | null>(null);
 
   useEffect(() => {
