@@ -69,6 +69,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           type="text"
           id="teamId"
           disabled={submitting}
+          required
           onChange={(e) => setTeamId(e.target.value)}
         ></input>
         <label htmlFor="accessToken">Access token:</label>
@@ -76,6 +77,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           type="password"
           id="accessToken"
           disabled={submitting}
+          required
           onChange={(e) => setAccessToken(e.target.value)}
         ></input>
         <button type="submit" disabled={submitting}>
