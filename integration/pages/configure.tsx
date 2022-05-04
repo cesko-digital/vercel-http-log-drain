@@ -1,6 +1,7 @@
 import { ChangeEvent, useState } from "react";
 import {
   createLogDrain,
+  deleteLogDrain,
   getLogDrains,
   LogDrain,
   LogDrainType,
@@ -57,6 +58,20 @@ const Page: React.FC = () => {
     }
   };
 
+  const handleDrainDeletion = async (drainId: string) => {
+    if (state.tag !== "logged_in") {
+      throw "Invalid state";
+    }
+    try {
+      const { accessToken, teamId } = state.credentials;
+      await deleteLogDrain(accessToken, drainId, teamId);
+      const drains = state.drains.filter((drain) => drain.id !== drainId);
+      setState({ ...state, drains });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   switch (state.tag) {
     case "login":
       return (
@@ -74,6 +89,7 @@ const Page: React.FC = () => {
       return (
         <DrainList
           drains={state.drains}
+          onDeleteClick={handleDrainDeletion}
           onCreateClick={() =>
             setState({
               tag: "create_new_drain",
@@ -158,11 +174,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
 export type DrainListProps = {
   drains: LogDrain[];
   onCreateClick?: () => void;
+  onDeleteClick?: (id: string) => void;
 };
 
 const DrainList: React.FC<DrainListProps> = ({
   drains,
-  onCreateClick = undefined,
+  onCreateClick = () => console.log("Create new drain"),
+  onDeleteClick = (id) => console.log(`Delete drain ${id}`),
 }) => (
   <div>
     <p>
@@ -172,7 +190,8 @@ const DrainList: React.FC<DrainListProps> = ({
       {drains.map((drain) => (
         <li key={drain.id}>
           {drain.name} (<code>#{drain.id}</code>, type <code>{drain.type}</code>
-          , logs to <a href={drain.url}>{drain.url}</a>)
+          , logs to <a href={drain.url}>{drain.url}</a>){" "}
+          <button onClick={() => onDeleteClick(drain.id)}>Delete</button>
         </li>
       ))}
     </ul>
