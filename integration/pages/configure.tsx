@@ -1,4 +1,5 @@
 import { ChangeEvent, useState } from "react";
+import { assert, randomString } from "lib/utils";
 import {
   createLogDrain,
   deleteLogDrain,
@@ -41,9 +42,7 @@ const Page: React.FC = () => {
   };
 
   const handleDrainCreation = async (params: DrainParams) => {
-    if (state.tag !== "create_new_drain") {
-      throw "Invalid state";
-    }
+    assert(state.tag === "create_new_drain", "Invalid state");
     const { credentials, drains } = state;
     const { accessToken, teamId } = credentials;
     try {
@@ -59,9 +58,7 @@ const Page: React.FC = () => {
   };
 
   const handleDrainDeletion = async (drainId: string) => {
-    if (state.tag !== "logged_in") {
-      throw "Invalid state";
-    }
+    assert(state.tag === "logged_in", "Invalid state");
     try {
       const { accessToken, teamId } = state.credentials;
       await deleteLogDrain(accessToken, drainId, teamId);
@@ -230,7 +227,7 @@ const NewDrain: React.FC<NewDrainProps> = ({
     type: "ndjson", // Let’s make this customizable later
     url: "",
     projectId: "",
-    secret: randomStr(8),
+    secret: randomString(8),
   });
 
   const updateParams =
@@ -304,12 +301,5 @@ const NewDrain: React.FC<NewDrainProps> = ({
     </>
   );
 };
-
-//
-// Helpers
-//
-
-const randomStr = (length: number) =>
-  (Math.random() + 1).toString(36).slice(2, 2 + length);
 
 export default Page;
