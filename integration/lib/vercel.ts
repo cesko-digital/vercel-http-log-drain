@@ -135,6 +135,31 @@ export async function createLogDrain(
   return await response.then((r) => r.json()).then(decodeLogDrain);
 }
 
+/** Delete a log drain */
+export async function deleteLogDrain(
+  accessToken: string,
+  drainId: string,
+  teamId: string | null
+): Promise<void> {
+  const url = getResourceUrl(`/v1/integrations/log-drains/${drainId}`, teamId);
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: authHeader(accessToken),
+  });
+  switch (response.status) {
+    case 204:
+      return;
+    case 400:
+      throw "One of the provided values in the request query is invalid";
+    case 403:
+      throw "You do not have permission to access this resource";
+    case 404:
+      throw "The log drain was not found";
+    default:
+      throw `Unexpected HTTP status code ${response.status}`;
+  }
+}
+
 /** Client-side helper to get all available projects */
 export async function getProjects(
   accessToken: string,
