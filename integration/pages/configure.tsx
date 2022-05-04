@@ -4,14 +4,17 @@ import {
   createLogDrain,
   deleteLogDrain,
   getLogDrains,
+  getProjects,
   LogDrain,
   LogDrainType,
+  Project,
 } from "lib/vercel";
 
 type Session = {
   teamId: string;
   accessToken: string;
   drains: LogDrain[];
+  projects: Project[];
 };
 
 type State =
@@ -33,7 +36,8 @@ const Page: React.FC = () => {
   const handleLogin = async (teamId: string, accessToken: string) => {
     try {
       const drains = await getLogDrains(accessToken, teamId);
-      const session: Session = { teamId, accessToken, drains };
+      const projects = await getProjects(accessToken, teamId);
+      const session: Session = { teamId, accessToken, drains, projects };
       setState({ tag: "logged_in", session });
     } catch (e) {
       setState({ tag: "login", submitting: false, error: "Login failed." });
@@ -43,18 +47,12 @@ const Page: React.FC = () => {
 
   const handleDrainCreation = async (params: DrainParams) => {
     assert(state.tag === "create_new_drain", "Invalid state");
-    const { accessToken, teamId, drains } = state.session;
+    const { session } = state;
+    const { accessToken, teamId } = session;
     try {
       const newDrain = await createLogDrain(accessToken, teamId, params);
-      const updatedDrains = [...drains, newDrain];
-      setState({
-        tag: "logged_in",
-        session: {
-          drains: updatedDrains,
-          accessToken,
-          teamId,
-        },
-      });
+      const drains = [...session.drains, newDrain];
+      setState({ tag: "logged_in", session: { ...session, drains } });
     } catch (e) {
       setState({ ...state, submitting: false, error: `${e}` });
     }
@@ -110,6 +108,7 @@ const Page: React.FC = () => {
             setState({ ...state, submitting: true, error: undefined });
             handleDrainCreation(params);
           }}
+          projects={session.projects}
           submitting={submitting}
           error={error}
         />
@@ -213,6 +212,7 @@ type DrainParams = {
 };
 
 type NewDrainProps = {
+  projects: Project[];
   submitting?: boolean;
   onSubmit?: (params: DrainParams) => void;
   onCancel?: () => void;
@@ -224,6 +224,7 @@ const NewDrain: React.FC<NewDrainProps> = ({
   onCancel = undefined,
   submitting = false,
   error = undefined,
+  projects,
 }) => {
   const [params, setParams] = useState<DrainParams>({
     name: "",
@@ -235,7 +236,7 @@ const NewDrain: React.FC<NewDrainProps> = ({
 
   const updateParams =
     <Key extends keyof DrainParams>(key: Key) =>
-    (e: ChangeEvent<HTMLInputElement>) =>
+    (e: ChangeEvent<any>) =>
       setParams({ ...params, [key]: e.target.value });
 
   const handleSubmit = (event: any) => {
@@ -270,15 +271,17 @@ const NewDrain: React.FC<NewDrainProps> = ({
         />
         <br />
 
-        <label htmlFor="projectId">Project ID:</label>
-        <input
-          type="text"
-          name="projectId"
-          id="projectId"
-          value={params.projectId}
-          onChange={updateParams("projectId")}
-          disabled={submitting}
-        />
+        <label htmlFor="projectId">Project filter:</label>
+        <select id="projectId" onChange={updateParams("projectId")}>
+          <option key="none" value="">
+            none
+          </option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.name}
+            </option>
+          ))}
+        </select>
         <br />
 
         <label htmlFor="secret">Secret:</label>
