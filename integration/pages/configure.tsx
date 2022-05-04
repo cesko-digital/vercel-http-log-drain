@@ -8,18 +8,18 @@ import {
   LogDrainType,
 } from "lib/vercel";
 
-type Credentials = {
+type Session = {
   teamId: string;
   accessToken: string;
+  drains: LogDrain[];
 };
 
 type State =
   | { tag: "login"; submitting: boolean; error?: string }
-  | { tag: "logged_in"; credentials: Credentials; drains: LogDrain[] }
+  | { tag: "logged_in"; session: Session }
   | {
       tag: "create_new_drain";
-      credentials: Credentials;
-      drains: LogDrain[];
+      session: Session;
       submitting: boolean;
       error?: string;
     };
@@ -30,27 +30,30 @@ const Page: React.FC = () => {
     submitting: false,
   });
 
-  const handleLogin = async (credentials: Credentials) => {
-    const { teamId, accessToken } = credentials;
+  const handleLogin = async (teamId: string, accessToken: string) => {
     try {
       const drains = await getLogDrains(accessToken, teamId);
-      setState({ tag: "logged_in", credentials, drains });
+      const session: Session = { teamId, accessToken, drains };
+      setState({ tag: "logged_in", session });
     } catch (e) {
-      console.error(e);
       setState({ tag: "login", submitting: false, error: "Login failed." });
+      console.error(e);
     }
   };
 
   const handleDrainCreation = async (params: DrainParams) => {
     assert(state.tag === "create_new_drain", "Invalid state");
-    const { credentials, drains } = state;
-    const { accessToken, teamId } = credentials;
+    const { accessToken, teamId, drains } = state.session;
     try {
       const newDrain = await createLogDrain(accessToken, teamId, params);
+      const updatedDrains = [...drains, newDrain];
       setState({
         tag: "logged_in",
-        drains: [...drains, newDrain],
-        credentials,
+        session: {
+          drains: updatedDrains,
+          accessToken,
+          teamId,
+        },
       });
     } catch (e) {
       setState({ ...state, submitting: false, error: `${e}` });
@@ -60,10 +63,11 @@ const Page: React.FC = () => {
   const handleDrainDeletion = async (drainId: string) => {
     assert(state.tag === "logged_in", "Invalid state");
     try {
-      const { accessToken, teamId } = state.credentials;
+      const { session } = state;
+      const { accessToken, teamId } = session;
       await deleteLogDrain(accessToken, drainId, teamId);
-      const drains = state.drains.filter((drain) => drain.id !== drainId);
-      setState({ ...state, drains });
+      const drains = session.drains.filter((drain) => drain.id !== drainId);
+      setState({ ...state, session: { ...session, drains } });
     } catch (e) {
       console.error(e);
     }
@@ -73,36 +77,35 @@ const Page: React.FC = () => {
     case "login":
       return (
         <LoginForm
-          onSubmit={(credentials) => {
+          onSubmit={(teamId, accessToken) => {
             setState({ ...state, submitting: true });
-            handleLogin(credentials);
+            handleLogin(teamId, accessToken);
           }}
           submitting={state.submitting}
           error={state.error}
         />
       );
     case "logged_in": {
-      const { credentials, drains } = state;
+      const { session } = state;
       return (
         <DrainList
-          drains={state.drains}
+          drains={session.drains}
           onDeleteClick={handleDrainDeletion}
           onCreateClick={() =>
             setState({
               tag: "create_new_drain",
-              credentials,
-              drains,
               submitting: false,
+              session,
             })
           }
         />
       );
     }
     case "create_new_drain": {
-      const { credentials, drains, submitting, error } = state;
+      const { session, submitting, error } = state;
       return (
         <NewDrain
-          onCancel={() => setState({ tag: "logged_in", credentials, drains })}
+          onCancel={() => setState({ tag: "logged_in", session })}
           onSubmit={(params) => {
             setState({ ...state, submitting: true, error: undefined });
             handleDrainCreation(params);
@@ -121,7 +124,7 @@ const Page: React.FC = () => {
 
 type LoginFormProps = {
   submitting?: boolean;
-  onSubmit?: (credentials: Credentials) => void;
+  onSubmit?: (teamId: string, accessToken: string) => void;
   error?: string;
 };
 
@@ -133,7 +136,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const [accessToken, setAccessToken] = useState("");
   const [teamId, setTeamId] = useState("");
   const handleSubmit = (event: any) => {
-    onSubmit({ teamId, accessToken });
+    onSubmit(teamId, accessToken);
     event.preventDefault();
   };
   return (
