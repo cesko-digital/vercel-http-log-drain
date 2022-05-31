@@ -71,7 +71,7 @@ func TestService(t *testing.T) {
 		fieldNames := []string{"NumAdded", "NumFlushed", "NumCreated"}
 		for _, f := range fieldNames {
 			v := reflect.ValueOf(stats).FieldByName(f)
-			if v.Uint() != 2 {
+			if v.Uint() != 3 {
 				t.Errorf("Unexpected value for [%s]: %d", f, v.Uint())
 			}
 		}

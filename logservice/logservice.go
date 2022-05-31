@@ -205,6 +205,8 @@ func (s *Service) TransformEntry(input []byte) ([]byte, error) {
 		message.WriteString(gjson.GetBytes(input, "proxy.method").String())
 		message.WriteString(" ")
 		message.WriteString(gjson.GetBytes(input, "proxy.path").String())
+		message.WriteString(" ")
+		message.WriteString(gjson.GetBytes(input, "message").String())
 
 		output, err = sjson.SetBytes(output, "message", message.String())
 		if err != nil {
