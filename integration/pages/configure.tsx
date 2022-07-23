@@ -139,30 +139,54 @@ const LoginForm: React.FC<LoginFormProps> = ({
     event.preventDefault();
   };
   return (
-    <>
+    <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col">
       <form onSubmit={handleSubmit}>
-        <label htmlFor="teamId">Team ID:</label>
-        <input
-          type="text"
-          id="teamId"
-          disabled={submitting}
-          required
-          onChange={(e) => setTeamId(e.target.value)}
-        />
-        <label htmlFor="accessToken">Access token:</label>
-        <input
-          type="password"
-          id="accessToken"
-          disabled={submitting}
-          required
-          onChange={(e) => setAccessToken(e.target.value)}
-        />
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Logging in…" : "Log in"}
-        </button>
+        <div className="mb-4">
+          <label
+            htmlFor="teamId"
+            className="block text-grey-darker text-sm font-bold mb-2"
+          >
+            Team ID:
+          </label>
+          <input
+            type="text"
+            id="teamId"
+            disabled={submitting}
+            required
+            onChange={(e) => setTeamId(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker"
+          />
+        </div>
+
+        <div className="mb-6">
+          <label
+            htmlFor="accessToken"
+            className="block text-grey-darker text-sm font-bold mb-2"
+          >
+            Access token:
+          </label>
+          <input
+            type="password"
+            id="accessToken"
+            disabled={submitting}
+            required
+            onChange={(e) => setAccessToken(e.target.value)}
+            className="shadow appearance-none border border-red rounded w-full py-2 px-3 text-grey-darker mb-3"
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="bg-blue-500 disabled:bg-gray-300 text-white font-bold py-2 px-4 mb-3 rounded"
+          >
+            {submitting ? "Logging in…" : "Log in"}
+          </button>
+        </div>
       </form>
-      {error && <p>{error}</p>}
-    </>
+      {error && <p className="text-red-500">{error}</p>}
+    </div>
   );
 };
 
